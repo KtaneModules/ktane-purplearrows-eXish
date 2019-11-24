@@ -11,6 +11,10 @@ public class PurpleArrowsScript : MonoBehaviour {
     public KMAudio audio;
     public KMBombInfo bomb;
 
+    public KMColorblindMode Colorblind;
+    public GameObject colorblindText;
+    private bool colorblindMode;
+
     public KMSelectable[] buttons;
     public GameObject numDisplay;
     public GameObject wordDisplay;
@@ -34,6 +38,8 @@ public class PurpleArrowsScript : MonoBehaviour {
     private string finish;
     private string finishscrambled;
 
+    private bool cooldown = false;
+
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
@@ -51,12 +57,21 @@ public class PurpleArrowsScript : MonoBehaviour {
 
     void Start () {
         numDisplay.GetComponent<TextMesh>().text = " ";
+        wordDisplay.GetComponent<TextMesh>().text = " ";
+        GetComponent<KMBombModule>().OnActivate += OnActivate;
+    }
+
+    void OnActivate()
+    {
+        numDisplay.GetComponent<TextMesh>().text = "GL";
+        wordDisplay.GetComponent<TextMesh>().text = "LETSGO";
         StartCoroutine(generateNewLet());
+        colorblind();
     }
 
     void PressButton(KMSelectable pressed)
     {
-        if(moduleSolved != true)
+        if(moduleSolved != true && cooldown != true)
         {
             pressed.AddInteractionPunch(0.25f);
             audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
@@ -120,9 +135,33 @@ public class PurpleArrowsScript : MonoBehaviour {
                     GetComponent<KMBombModule>().HandleStrike();
                     Debug.LogFormat("[Purple Arrows #{0}] Pressed submit at '{1}'! That was incorrect!", moduleId, words[current]);
                     Debug.LogFormat("[Purple Arrows #{0}] Resetting Module...", moduleId);
-                    Start();
+                    numDisplay.GetComponent<TextMesh>().text = " ";
+                    int rando = UnityEngine.Random.Range(0, 3);
+                    if(rando == 0)
+                    {
+                        wordDisplay.GetComponent<TextMesh>().text = "WHOOPS";
+                    }
+                    else if (rando == 1)
+                    {
+                        wordDisplay.GetComponent<TextMesh>().text = "OHNOES";
+                    }
+                    else if (rando == 2)
+                    {
+                        wordDisplay.GetComponent<TextMesh>().text = "AGHHHH";
+                    }
+                    StartCoroutine(generateNewLet());
                 }
             }
+        }
+    }
+
+    private void colorblind()
+    {
+        colorblindMode = Colorblind.ColorblindModeActive;
+        if (colorblindMode)
+        {
+            Debug.LogFormat("[Red Arrows #{0}] Colorblind mode active!", moduleId);
+            colorblindText.SetActive(true);
         }
     }
 
@@ -165,16 +204,19 @@ public class PurpleArrowsScript : MonoBehaviour {
     private IEnumerator wallBump()
     {
         yield return null;
+        cooldown = true;
         string store = words[current].Substring(0, 1);
         numDisplay.GetComponent<TextMesh>().text = " ";
         yield return new WaitForSeconds(0.25f);
         numDisplay.GetComponent<TextMesh>().text = ""+store;
+        cooldown = false;
         StopCoroutine("wallBump");
     }
 
     private IEnumerator generateNewLet()
     {
         yield return null;
+        cooldown = true;
         int rando = UnityEngine.Random.RandomRange(0, 117);
         start = words[rando];
         current = rando;
@@ -195,19 +237,24 @@ public class PurpleArrowsScript : MonoBehaviour {
     {
         yield return null;
         char[] array = finish.ToCharArray();
-        System.Random rng = new System.Random();
-        int n = array.Length;
-        while (n > 1)
+        finishscrambled = finish;
+        while(finishscrambled == finish)
         {
-            n--;
-            int k = rng.Next(n + 1);
-            var value = array[k];
-            array[k] = array[n];
-            array[n] = value;
+            System.Random rng = new System.Random();
+            int n = array.Length;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                var value = array[k];
+                array[k] = array[n];
+                array[n] = value;
+            }
+            string scram = new string(array);
+            finishscrambled = scram;
         }
-        string scram = new string(array);
-        finishscrambled = scram;
         wordDisplay.GetComponent<TextMesh>().text = finishscrambled;
+        cooldown = false;
         StopCoroutine("scrambleFinish");
         Debug.LogFormat("[Purple Arrows #{0}] The finishing word is '{1}'! It has been scrambled as '{2}'!", moduleId, finish, finishscrambled);
     }
@@ -238,7 +285,7 @@ public class PurpleArrowsScript : MonoBehaviour {
 
     //twitch plays
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} up [Presses the up arrow button] | !{0} right [Presses the right arrow button] | !{0} down [Presses the down arrow button once] | !{0} left [Presses the left arrow button once] | !{0} left right down up [Chain button presses] | !{0} submit [Submits the current word (position)] | Direction words can be substituted as one letter (Ex. right as r)";
+    private readonly string TwitchHelpMessage = @"!{0} u/d/l/r [Presses the specified arrow button] | !{0} submit [Submits the current word (position)] | Presses can be chained, for example '!{0} uuddlrl'";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
@@ -246,31 +293,79 @@ public class PurpleArrowsScript : MonoBehaviour {
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
             yield return null;
-            yield return new[] { buttons[4] };
+            buttons[4].OnInteract();
             yield break;
         }
 
         string[] parameters = command.Split(' ');
-        var buttonsToPress = new List<KMSelectable>();
-        foreach (string param in parameters)
+        string checks = "";
+        for (int j = 0; j < parameters.Length; j++)
         {
-            if (param.EqualsIgnoreCase("up") || param.EqualsIgnoreCase("u"))
+            checks += parameters[j];
+        }
+        var buttonsToPress = new List<KMSelectable>();
+        for (int i = 0; i < checks.Length; i++)
+        {
+            if (checks.ElementAt(i).Equals('u') || checks.ElementAt(i).Equals('U'))
                 buttonsToPress.Add(buttons[0]);
-            else if (param.EqualsIgnoreCase("down") || param.EqualsIgnoreCase("d"))
+            else if (checks.ElementAt(i).Equals('d') || checks.ElementAt(i).Equals('D'))
                 buttonsToPress.Add(buttons[1]);
-            else if (param.EqualsIgnoreCase("left") || param.EqualsIgnoreCase("l"))
+            else if (checks.ElementAt(i).Equals('l') || checks.ElementAt(i).Equals('L'))
                 buttonsToPress.Add(buttons[2]);
-            else if (param.EqualsIgnoreCase("right") || param.EqualsIgnoreCase("r"))
+            else if (checks.ElementAt(i).Equals('r') || checks.ElementAt(i).Equals('R'))
                 buttonsToPress.Add(buttons[3]);
             else
                 yield break;
         }
 
         yield return null;
-        foreach(KMSelectable bm in buttonsToPress)
+        foreach (KMSelectable km in buttonsToPress)
         {
-            bm.OnInteract();
-            yield return new WaitForSeconds(0.5f);
+            km.OnInteract();
+            yield return new WaitForSeconds(.3f);
         }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            buttons[2].OnInteract();
+            yield return new WaitForSeconds(0.3f);
+        }
+        for (int i = 0; i < 12; i++)
+        {
+            buttons[0].OnInteract();
+            yield return new WaitForSeconds(0.3f);
+        }
+        int counter = 0;
+        int counter2 = 0;
+        int local = Array.IndexOf(words, finish);
+        while (local > 0)
+        {
+            if(local >= 9)
+            {
+                local -= 9;
+                counter++;
+            }
+            else if (local >= 1)
+            {
+                local -= 1;
+                counter2++;
+            }
+        }
+        for(int i = 0; i < counter; i++)
+        {
+            buttons[1].OnInteract();
+            yield return new WaitForSeconds(0.3f);
+        }
+        for (int i = 0; i < counter2; i++)
+        {
+            buttons[3].OnInteract();
+            yield return new WaitForSeconds(0.3f);
+        }
+        yield return new WaitForSeconds(0.1f);
+        yield return ProcessTwitchCommand("submit");
+        yield return true;
     }
 }
