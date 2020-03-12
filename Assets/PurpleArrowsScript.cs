@@ -39,6 +39,7 @@ public class PurpleArrowsScript : MonoBehaviour {
     private string finishscrambled;
 
     private bool cooldown = false;
+    private bool isanimating = false;
 
     static int moduleIdCounter = 1;
     int moduleId;
@@ -127,6 +128,7 @@ public class PurpleArrowsScript : MonoBehaviour {
             {
                 if (words[current].Equals(finish))
                 {
+                    moduleSolved = true;
                     StartCoroutine(victory());
                     Debug.LogFormat("[Purple Arrows #{0}] Pressed submit at '{1}'! That was correct!", moduleId, words[current]);
                 }
@@ -262,7 +264,7 @@ public class PurpleArrowsScript : MonoBehaviour {
     private IEnumerator victory()
     {
         yield return null;
-        moduleSolved = true;
+        isanimating = true;
         wordDisplay.GetComponent<TextMesh>().text = "" + finish;
         for (int i = 0; i < 100; i++)
         {
@@ -281,6 +283,7 @@ public class PurpleArrowsScript : MonoBehaviour {
         StopCoroutine("victory");
         Debug.LogFormat("[Purple Arrows #{0}] Module Disarmed!", moduleId);
         GetComponent<KMBombModule>().HandlePass();
+        isanimating = false;
     }
 
     //twitch plays
@@ -294,6 +297,8 @@ public class PurpleArrowsScript : MonoBehaviour {
         {
             yield return null;
             buttons[4].OnInteract();
+            yield return new WaitForSeconds(.1f);
+            if (moduleSolved) { yield return "solve"; }
             yield break;
         }
 
@@ -366,6 +371,6 @@ public class PurpleArrowsScript : MonoBehaviour {
         }
         yield return new WaitForSeconds(0.1f);
         yield return ProcessTwitchCommand("submit");
-        yield return true;
+        while (isanimating) { yield return true; yield return new WaitForSeconds(0.1f); }
     }
 }
