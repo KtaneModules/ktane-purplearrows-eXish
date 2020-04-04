@@ -25,7 +25,7 @@ public class PurpleArrowsScript : MonoBehaviour {
                                "HONEST","REFUSE","ACCESS","PUNISH","VALLEY","WRITER","HAPPEN","BUCKET","AGENDA",
                                "BUBBLE","TYCOON","HEALTH","HAMMER","USEFUL","OFFSET","QUAINT","BOMBER","DETAIL",
                                "RESULT","ENERGY","PIGEON","EXCUSE","PLEASE","RELATE","APPEAR","THANKS","VISUAL",
-                               "TRANCE","DINNER","THRONE","ELAPSE","WEALTH","JACKET","TUMBLE","WEAPON","WONDER",
+                               "TRANCE","DINNER","THRONE","DANKER","WEALTH","JACKET","TUMBLE","WEAPON","WONDER",
                                "BOUNCE","HICCUP","UNIQUE","PRAYER","BRONZE","ENDURE","TIMBER","INSIDE","EMBARK",
                                "PLEDGE","POETRY","VELVET","WAITER","ESTATE","BELONG","IGNORE","HOTDOG","REGRET",
                                "ROTTEN","ADJUST","EXPAND","BORROW","TREATY","PLAYER","JUNIOR","WANDER","HELMET",
@@ -38,7 +38,7 @@ public class PurpleArrowsScript : MonoBehaviour {
     private string finish;
     private string finishscrambled;
 
-    private bool cooldown = false;
+    private bool cooldown = true;
     private bool isanimating = false;
 
     static int moduleIdCounter = 1;
@@ -151,6 +151,7 @@ public class PurpleArrowsScript : MonoBehaviour {
                     {
                         wordDisplay.GetComponent<TextMesh>().text = "AGHHHH";
                     }
+                    cooldown = true;
                     StartCoroutine(generateNewLet());
                 }
             }
@@ -162,7 +163,7 @@ public class PurpleArrowsScript : MonoBehaviour {
         colorblindMode = Colorblind.ColorblindModeActive;
         if (colorblindMode)
         {
-            Debug.LogFormat("[Red Arrows #{0}] Colorblind mode active!", moduleId);
+            Debug.LogFormat("[Purple Arrows #{0}] Colorblind mode active!", moduleId);
             colorblindText.SetActive(true);
         }
     }
@@ -218,7 +219,6 @@ public class PurpleArrowsScript : MonoBehaviour {
     private IEnumerator generateNewLet()
     {
         yield return null;
-        cooldown = true;
         int rando = UnityEngine.Random.RandomRange(0, 117);
         start = words[rando];
         current = rando;
