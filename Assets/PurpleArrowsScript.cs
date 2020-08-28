@@ -58,71 +58,69 @@ public class PurpleArrowsScript : MonoBehaviour {
 
     void Start () {
         numDisplay.GetComponent<TextMesh>().text = " ";
-        wordDisplay.GetComponent<TextMesh>().text = " ";
+        wordDisplay.GetComponent<TextMesh>().text = "------";
         GetComponent<KMBombModule>().OnActivate += OnActivate;
     }
 
     void OnActivate()
     {
-        numDisplay.GetComponent<TextMesh>().text = "GL";
-        wordDisplay.GetComponent<TextMesh>().text = "LETSGO";
         StartCoroutine(generateNewLet());
         colorblind();
     }
 
     void PressButton(KMSelectable pressed)
     {
-        if(moduleSolved != true && cooldown != true)
+        if (moduleSolved != true && cooldown != true)
         {
             pressed.AddInteractionPunch(0.25f);
-            audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+            audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, pressed.transform);
             if (pressed == buttons[0])
             {
                 if (currentIsUpSide())
                 {
-                    StartCoroutine(wallBump());
+                    current += 108;
                 }
                 else
                 {
                     current -= 9;
-                    numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
                 }
+                numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
             }
             else if (pressed == buttons[1])
             {
                 if (currentIsDownSide())
                 {
-                    StartCoroutine(wallBump());
+                    current -= 108;
                 }
                 else
                 {
                     current += 9;
-                    numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
                 }
+                numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
             }
             else if (pressed == buttons[2])
             {
                 if (currentIsLeftSide())
                 {
-                    StartCoroutine(wallBump());
+                    current += 8;
                 }
                 else
                 {
                     current -= 1;
-                    numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
                 }
+                numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
             }
             else if (pressed == buttons[3])
             {
                 if (currentIsRightSide())
                 {
-                    StartCoroutine(wallBump());
+                    current -= 8;
                 }
                 else
                 {
                     current += 1;
-                    numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
                 }
+                numDisplay.GetComponent<TextMesh>().text = "" + words[current].Substring(0, 1);
             }
             else if (pressed == buttons[4])
             {
@@ -138,19 +136,7 @@ public class PurpleArrowsScript : MonoBehaviour {
                     Debug.LogFormat("[Purple Arrows #{0}] Pressed submit at '{1}'! That was incorrect!", moduleId, words[current]);
                     Debug.LogFormat("[Purple Arrows #{0}] Resetting Module...", moduleId);
                     numDisplay.GetComponent<TextMesh>().text = " ";
-                    int rando = UnityEngine.Random.Range(0, 3);
-                    if(rando == 0)
-                    {
-                        wordDisplay.GetComponent<TextMesh>().text = "WHOOPS";
-                    }
-                    else if (rando == 1)
-                    {
-                        wordDisplay.GetComponent<TextMesh>().text = "OHNOES";
-                    }
-                    else if (rando == 2)
-                    {
-                        wordDisplay.GetComponent<TextMesh>().text = "AGHHHH";
-                    }
+                    wordDisplay.GetComponent<TextMesh>().text = "------";
                     cooldown = true;
                     StartCoroutine(generateNewLet());
                 }
@@ -170,7 +156,7 @@ public class PurpleArrowsScript : MonoBehaviour {
 
     private bool currentIsUpSide()
     {
-        if((current == 0) || (current == 1) || (current == 2) || (current == 3) || (current == 4) || (current == 5) || (current == 6) || (current == 7) || (current == 8))
+        if ((current == 0) || (current == 1) || (current == 2) || (current == 3) || (current == 4) || (current == 5) || (current == 6) || (current == 7) || (current == 8))
         {
             return true;
         }
@@ -204,22 +190,10 @@ public class PurpleArrowsScript : MonoBehaviour {
         return false;
     }
 
-    private IEnumerator wallBump()
-    {
-        yield return null;
-        cooldown = true;
-        string store = words[current].Substring(0, 1);
-        numDisplay.GetComponent<TextMesh>().text = " ";
-        yield return new WaitForSeconds(0.25f);
-        numDisplay.GetComponent<TextMesh>().text = ""+store;
-        cooldown = false;
-        StopCoroutine("wallBump");
-    }
-
     private IEnumerator generateNewLet()
     {
         yield return null;
-        int rando = UnityEngine.Random.RandomRange(0, 117);
+        int rando = UnityEngine.Random.Range(0, 117);
         start = words[rando];
         current = rando;
         yield return new WaitForSeconds(0.5f);
@@ -227,7 +201,7 @@ public class PurpleArrowsScript : MonoBehaviour {
         int rando2 = rando;
         while(rando2 == rando)
         {
-            rando2 = UnityEngine.Random.RandomRange(0, 117);
+            rando2 = UnityEngine.Random.Range(0, 117);
             finish = words[rando2];
         }
         StopCoroutine("generateNewLet");
@@ -268,7 +242,7 @@ public class PurpleArrowsScript : MonoBehaviour {
         wordDisplay.GetComponent<TextMesh>().text = "" + finish;
         for (int i = 0; i < 100; i++)
         {
-            int rand1 = UnityEngine.Random.RandomRange(0, 10);
+            int rand1 = UnityEngine.Random.Range(0, 10);
             if (i < 50)
             {
                 numDisplay.GetComponent<TextMesh>().text = rand1 + "";
@@ -290,7 +264,6 @@ public class PurpleArrowsScript : MonoBehaviour {
     #pragma warning disable 414
     private readonly string TwitchHelpMessage = @"!{0} u/d/l/r [Presses the specified arrow button] | !{0} submit [Submits the current word (position)] | Presses can be chained, for example '!{0} uuddlrl'";
     #pragma warning restore 414
-
     IEnumerator ProcessTwitchCommand(string command)
     {
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
@@ -329,48 +302,5 @@ public class PurpleArrowsScript : MonoBehaviour {
             km.OnInteract();
             yield return new WaitForSeconds(.3f);
         }
-    }
-
-    IEnumerator TwitchHandleForcedSolve()
-    {
-        for (int i = 0; i < 8; i++)
-        {
-            buttons[2].OnInteract();
-            yield return new WaitForSeconds(0.3f);
-        }
-        for (int i = 0; i < 12; i++)
-        {
-            buttons[0].OnInteract();
-            yield return new WaitForSeconds(0.3f);
-        }
-        int counter = 0;
-        int counter2 = 0;
-        int local = Array.IndexOf(words, finish);
-        while (local > 0)
-        {
-            if(local >= 9)
-            {
-                local -= 9;
-                counter++;
-            }
-            else if (local >= 1)
-            {
-                local -= 1;
-                counter2++;
-            }
-        }
-        for(int i = 0; i < counter; i++)
-        {
-            buttons[1].OnInteract();
-            yield return new WaitForSeconds(0.3f);
-        }
-        for (int i = 0; i < counter2; i++)
-        {
-            buttons[3].OnInteract();
-            yield return new WaitForSeconds(0.3f);
-        }
-        yield return new WaitForSeconds(0.1f);
-        yield return ProcessTwitchCommand("submit");
-        while (isanimating) { yield return true; yield return new WaitForSeconds(0.1f); }
     }
 }
