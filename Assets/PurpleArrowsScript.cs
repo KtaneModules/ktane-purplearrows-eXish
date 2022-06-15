@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using KModkit;
 using System;
 using System.Text.RegularExpressions;
 
@@ -51,6 +50,7 @@ public class PurpleArrowsScript : MonoBehaviour
         current = 0;
         moduleId = moduleIdCounter++;
         moduleSolved = false;
+        colorblindMode = Colorblind.ColorblindModeActive;
         foreach (KMSelectable obj in buttons)
         {
             KMSelectable pressed = obj;
@@ -68,7 +68,8 @@ public class PurpleArrowsScript : MonoBehaviour
     void OnActivate()
     {
         StartCoroutine(generateNewLet());
-        colorblind();
+        if (colorblindMode)
+            colorblindText.SetActive(true);
     }
 
     void PressButton(KMSelectable pressed)
@@ -147,16 +148,6 @@ public class PurpleArrowsScript : MonoBehaviour
         }
     }
 
-    private void colorblind()
-    {
-        colorblindMode = Colorblind.ColorblindModeActive;
-        if (colorblindMode)
-        {
-            Debug.LogFormat("[Purple Arrows #{0}] Colorblind mode active!", moduleId);
-            colorblindText.SetActive(true);
-        }
-    }
-
     private bool currentIsUpSide()
     {
         if ((current == 0) || (current == 1) || (current == 2) || (current == 3) || (current == 4) || (current == 5) || (current == 6) || (current == 7) || (current == 8))
@@ -207,7 +198,6 @@ public class PurpleArrowsScript : MonoBehaviour
             rando2 = UnityEngine.Random.Range(0, 117);
             finish = words[rando2];
         }
-        StopCoroutine("generateNewLet");
         StartCoroutine(scrambleFinish());
         Debug.LogFormat("[Purple Arrows #{0}] The starting word is '{1}'!", moduleId, start);
     }
@@ -234,7 +224,6 @@ public class PurpleArrowsScript : MonoBehaviour
         }
         wordDisplay.GetComponent<TextMesh>().text = finishscrambled;
         cooldown = false;
-        StopCoroutine("scrambleFinish");
         Debug.LogFormat("[Purple Arrows #{0}] The finishing word is '{1}'! It has been scrambled as '{2}'!", moduleId, finish, finishscrambled);
     }
 
@@ -257,23 +246,21 @@ public class PurpleArrowsScript : MonoBehaviour
             yield return new WaitForSeconds(0.025f);
         }
         numDisplay.GetComponent<TextMesh>().text = "GG";
-        StopCoroutine("victory");
         Debug.LogFormat("[Purple Arrows #{0}] Module Disarmed!", moduleId);
         GetComponent<KMBombModule>().HandlePass();
         isanimating = false;
     }
 
     //twitch plays
-#pragma warning disable 414
+    #pragma warning disable 414
     private readonly string TwitchHelpMessage = @"!{0} u/d/l/r [Presses the specified arrow button] | !{0} submit [Submits the current word (position)] | Presses can be chained, for example '!{0} uuddlrl'";
-#pragma warning restore 414
+    #pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
             yield return null;
             buttons[4].OnInteract();
-            yield return new WaitForSeconds(.1f);
             if (moduleSolved) { yield return "solve"; }
             yield break;
         }
@@ -281,9 +268,7 @@ public class PurpleArrowsScript : MonoBehaviour
         string[] parameters = command.Split(' ');
         string checks = "";
         for (int j = 0; j < parameters.Length; j++)
-        {
             checks += parameters[j];
-        }
         var buttonsToPress = new List<KMSelectable>();
         for (int i = 0; i < checks.Length; i++)
         {
@@ -300,11 +285,7 @@ public class PurpleArrowsScript : MonoBehaviour
         }
 
         yield return null;
-        foreach (KMSelectable km in buttonsToPress)
-        {
-            km.OnInteract();
-            yield return new WaitForSeconds(.3f);
-        }
+        yield return buttonsToPress;
     }
 
     private IEnumerator TwitchHandleForcedSolve()
