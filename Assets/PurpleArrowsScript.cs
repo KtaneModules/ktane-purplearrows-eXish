@@ -229,8 +229,8 @@ public class PurpleArrowsScript : MonoBehaviour
 
     private IEnumerator victory()
     {
-        yield return null;
         isanimating = true;
+        yield return null;
         wordDisplay.GetComponent<TextMesh>().text = "" + finish;
         for (int i = 0; i < 100; i++)
         {
