@@ -6,7 +6,8 @@ using KModkit;
 using System;
 using System.Text.RegularExpressions;
 
-public class PurpleArrowsScript : MonoBehaviour {
+public class PurpleArrowsScript : MonoBehaviour
+{
 
     public KMAudio audio;
     public KMBombInfo bomb;
@@ -50,13 +51,15 @@ public class PurpleArrowsScript : MonoBehaviour {
         current = 0;
         moduleId = moduleIdCounter++;
         moduleSolved = false;
-        foreach(KMSelectable obj in buttons){
+        foreach (KMSelectable obj in buttons)
+        {
             KMSelectable pressed = obj;
             pressed.OnInteract += delegate () { PressButton(pressed); return false; };
         }
     }
 
-    void Start () {
+    void Start()
+    {
         numDisplay.GetComponent<TextMesh>().text = " ";
         wordDisplay.GetComponent<TextMesh>().text = "------";
         GetComponent<KMBombModule>().OnActivate += OnActivate;
@@ -70,7 +73,7 @@ public class PurpleArrowsScript : MonoBehaviour {
 
     void PressButton(KMSelectable pressed)
     {
-        if (moduleSolved != true && cooldown != true)
+        if (!moduleSolved && !cooldown)
         {
             pressed.AddInteractionPunch(0.25f);
             audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, pressed.transform);
@@ -197,9 +200,9 @@ public class PurpleArrowsScript : MonoBehaviour {
         start = words[rando];
         current = rando;
         yield return new WaitForSeconds(0.5f);
-        numDisplay.GetComponent<TextMesh>().text = "" + start.Substring(0,1);
+        numDisplay.GetComponent<TextMesh>().text = "" + start.Substring(0, 1);
         int rando2 = rando;
-        while(rando2 == rando)
+        while (rando2 == rando)
         {
             rando2 = UnityEngine.Random.Range(0, 117);
             finish = words[rando2];
@@ -214,7 +217,7 @@ public class PurpleArrowsScript : MonoBehaviour {
         yield return null;
         char[] array = finish.ToCharArray();
         finishscrambled = finish;
-        while(finishscrambled == finish)
+        while (finishscrambled == finish)
         {
             System.Random rng = new System.Random();
             int n = array.Length;
@@ -261,9 +264,9 @@ public class PurpleArrowsScript : MonoBehaviour {
     }
 
     //twitch plays
-    #pragma warning disable 414
+#pragma warning disable 414
     private readonly string TwitchHelpMessage = @"!{0} u/d/l/r [Presses the specified arrow button] | !{0} submit [Submits the current word (position)] | Presses can be chained, for example '!{0} uuddlrl'";
-    #pragma warning restore 414
+#pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
@@ -302,5 +305,33 @@ public class PurpleArrowsScript : MonoBehaviour {
             km.OnInteract();
             yield return new WaitForSeconds(.3f);
         }
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        while (cooldown)
+            yield return true;
+        var endPos = Array.IndexOf(words, finish);
+        var x = Math.Abs((current % 9) - (endPos % 9)) >= 5 ? ((current % 9) - (endPos % 9) > 0 ? (current % 9) - (endPos % 9) - 9 : (current % 9) - (endPos % 9) + 9) : (current % 9) - (endPos % 9);
+        var y = Math.Abs((current / 9) - (endPos / 9)) >= 7 ? ((current / 9) - (endPos / 9) > 0 ? (current / 9) - (endPos / 9) - 117 : (current / 9) - (endPos / 9) + 117) : (current / 9) - (endPos / 9);
+        while (current % 9 != endPos % 9)
+        {
+            if (x < 0)
+                buttons[3].OnInteract();
+            if (x > 0)
+                buttons[2].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        while (current / 9 != endPos / 9)
+        {
+            if (y < 0)
+                buttons[1].OnInteract();
+            if (y > 0)
+                buttons[0].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        buttons[4].OnInteract();
+        while (isanimating)
+            yield return true;
     }
 }
