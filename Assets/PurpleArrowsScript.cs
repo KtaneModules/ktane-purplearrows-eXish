@@ -36,17 +36,6 @@ public class PurpleArrowsScript : MonoBehaviour
     int moduleId;
     private bool moduleSolved;
 
-    private string Alphabetize(string str)
-    {
-        var alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        string s = "";
-        for (int i = 0; i < 26; i++)
-            for (int j = 0; j < 6; j++)
-                if (str[j] == alph[i])
-                    s += str[j].ToString();
-        return s;
-    }
-
     void Awake()
     {
         current = 0;
